@@ -26,7 +26,7 @@
 #'
 #' @importFrom stats cor dist
 #' 
-#' @useDynLib SC3
+#' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
 #'
 calculate_distance <- function(data, method) {
@@ -84,7 +84,7 @@ transformation <- function(dists, method) {
 #' @param clusts a matrix containing clustering solutions in columns
 #' @return consensus matrix
 #' 
-#' @useDynLib SC3
+#' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
 #' @export
 consensus_matrix <- function(clusts) {
@@ -92,6 +92,41 @@ consensus_matrix <- function(clusts) {
     colnames(res) <- as.character(c(1:nrow(clusts)))
     rownames(res) <- as.character(c(1:nrow(clusts)))
     return(res)
+}
+
+#' Calculate consensus matrix2
+#'
+#' For each clustering solution a binary 
+#' similarity matrix is constructed from the corresponding cell labels: 
+#' if two cells belong to the same cluster, their similarity is 1, otherwise 
+#' the similarity is 0. A consensus matrix is calculated by averaging all 
+#' similarity matrices.
+#'
+#' @param matrix a matrix containing clustering solutions in columns
+#' @k number of clusters
+#' @return consensus matrix
+#' 
+consensus_matrix2<-function(matrix, k) {
+  #constructing a binary matrix for the cluster identities n
+  n = ncol(matrix)
+  c = nrow(matrix)
+  b = matrix(0L,nrow = c,ncol = n)
+  message("Calculating consensus matrix...")
+  
+  for (i in 1:n) {
+    for (j in 1:c) {
+      #populate every cell of the binary matrix
+      rowValue=matrix[j,i]+k*(j-1)
+      b[i,rowValue]=1
+    }
+  }
+  
+  inputMatrix=t(b)/n*c
+  #add tolerance at convergence=1e-10.
+  res=kmeans(x=inputMatrix, centers = k)
+  colnames(res) <- as.character(c(1:nrow(clusts)))
+  rownames(res) <- as.character(c(1:nrow(clusts)))
+  return (res)
 }
 
 #' Run support vector machines (\code{SVM}) prediction
@@ -189,10 +224,10 @@ make_col_ann_for_heatmaps <- function(object, show_pdata) {
         }
     }
     ann <- NULL
-    if (is.null(metadata(object)$sc3$svm_train_inds)) {
+    if (is.null(metadata(object)$sc3min$svm_train_inds)) {
         ann <- colData(object)[, colnames(colData(object)) %in% show_pdata]
     } else {
-        ann <- colData(object)[metadata(object)$sc3$svm_train_inds, colnames(colData(object)) %in% 
+        ann <- colData(object)[metadata(object)$sc3min$svm_train_inds, colnames(colData(object)) %in% 
             show_pdata]
     }
     # remove columns with 1 value only
@@ -236,7 +271,7 @@ make_col_ann_for_heatmaps <- function(object, show_pdata) {
     return(ann)
 }
 
-#' Get processed dataset used by \code{SC3} clustering
+#' Get processed dataset used by \code{sc3min} clustering
 #' 
 #' Takes data from the \code{logcounts} slot, removes spike-ins and applies the gene filter.
 #' 
@@ -247,8 +282,8 @@ make_col_ann_for_heatmaps <- function(object, show_pdata) {
 #' @export
 get_processed_dataset <- function(object) {
     dataset <- logcounts(object)
-    if (!is.null(rowData(object)$sc3_gene_filter)) {
-        dataset <- dataset[rowData(object)$sc3_gene_filter, ]
+    if (!is.null(rowData(object)$sc3min_gene_filter)) {
+        dataset <- dataset[rowData(object)$sc3min_gene_filter, ]
     }
     return(dataset)
 }
