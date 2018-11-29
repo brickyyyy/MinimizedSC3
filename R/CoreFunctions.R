@@ -90,7 +90,7 @@ transformation <- function(dists, method) {
 consensus_matrix <- function(clusts,k) {
     res <- consmx(clusts)
     res<-calc_consensus(res,k)
-    colnames(res) <- as.character(c(1:nrow(clusts)))
+    #colnames(res) <- as.character(c(1:nrow(clusts)))
     rownames(res) <- as.character(c(1:nrow(clusts)))
     return(res)
 }
@@ -111,46 +111,21 @@ calc_consensus<-function(matrix, k) {
   #constructing a binary matrix for the cluster identities n
   n = ncol(matrix)
   c = nrow(matrix)
-  b = matrix(0L,nrow = c,ncol = n)
+  b = matrix(0L,nrow = n,ncol = c*k)
   message("Calculating consensus matrix...")
   for (i in 1:n) {
     for (j in 1:c) {
-      #populate every cell of the binary matrix
       #rowValue=matrix[j,i]+k*(j-1)
-      b[i,matrix[j,i]+k*(j-1)]<- b[i,matrix[j,i]+k*(j-1)] + 1
+      b[i,matrix[j,i]+k*(j-1)] + 1
     }
   }
 
   inputMatrix=t(b)/n*c
   #add tolerance at convergence=1e-10.
-  res=kmeans(x=inputMatrix, centers = k)
-  return (res)
+  #res=kmeans(x=inputMatrix, centers = k)
+  return (inputMatrix)
 }
-#' Calculate co-association matrix
-#'
-#'insert what it does here
-#'
-#' @param matrix a matrix containing clustering solutions in columns
-#' @return co-association matrix
-#' 
-coassociation_matrix <- function(matrix){
-  matrix=populateCoassociationMatrix(matrix)
-  c = nrow(matrix)
-  b = matrix(0L,nrow = c,ncol = c)
-  for (i in c) {
-    b[]
-  }
-}
-#' Calculate sum of binary matrices
-#'
-#'insert what it does here
-#'
-#' @param matrix a matrix containing clustering solutions in columns
-#' @return co-association matrix
-#' 
-populateCoassociationMatrix <- function(matrix){
-  
-}
+
 #' Run support vector machines (\code{SVM}) prediction
 #'
 #' Train an \code{SVM} classifier on a training dataset (\code{train}) and then

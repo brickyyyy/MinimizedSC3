@@ -55,10 +55,10 @@ sc3min.SingleCellExperiment <- function(object, ks, gene_filter, pct_dropout_min
     object <- sc3min_calc_dists(object)
     object <- sc3min_calc_transfs(object)
     object <- sc3min_kmeans(object, ks)
-    # object <- sc3min_calc_consens(object)
-    # if (biology) {
-    #     object <- sc3min_calc_biology(object, ks)
-    # }
+    object <- sc3min_calc_consens(object)
+    if (biology) {
+        object <- sc3min_calc_biology(object, ks)
+    }
     return(object)
 }
 
@@ -552,13 +552,17 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
             d <- k.means[grep(paste0("_", i, "_"), names(k.means))]
             d <- matrix(unlist(d), nrow = length(d[[1]]))
             #calculate co-association matrix here
-            dat <- consensus_matrix(d,ks)
+            
             # coassociation <- coassociation_matrix(d)
             # dat <- consensus_matrix2(coassociation,ks)
             # #tmp <- ED2(dat)
             #colnames(tmp) <- as.character(colnames(dat))
             #rownames(tmp) <- as.character(colnames(dat))
-            diss <- stats::as.dist(as.matrix(stats::as.dist(tmp)))
+            #diss <- stats::as.dist(as.matrix(stats::as.dist(tmp)))
+            dat <- consensus_matrix(d,ks)
+            res=kmeans(x=dat, centers = k)
+            diss <- stats::as.dist(as.matrix(stats::as.dist(res)))
+          
             hc <- stats::hclust(diss)
             clusts <- reindex_clusters(hc, i)
             
