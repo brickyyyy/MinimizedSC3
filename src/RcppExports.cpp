@@ -39,6 +39,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// consensus
+arma::mat consensus(const arma::mat matrix, int k);
+RcppExport SEXP _SC3min_consensus(SEXP matrixSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type matrix(matrixSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(consensus(matrix, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // norm_laplacian
 arma::mat norm_laplacian(arma::mat A);
 RcppExport SEXP _SC3min_norm_laplacian(SEXP ASEXP) {
@@ -66,6 +78,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_SC3min_ED1", (DL_FUNC) &_SC3min_ED1, 1},
     {"_SC3min_ED2", (DL_FUNC) &_SC3min_ED2, 1},
     {"_SC3min_consmx", (DL_FUNC) &_SC3min_consmx, 1},
+    {"_SC3min_consensus", (DL_FUNC) &_SC3min_consensus, 2},
     {"_SC3min_norm_laplacian", (DL_FUNC) &_SC3min_norm_laplacian, 1},
     {"_SC3min_tmult", (DL_FUNC) &_SC3min_tmult, 1},
     {NULL, NULL, 0}

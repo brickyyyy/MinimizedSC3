@@ -88,25 +88,30 @@ transformation <- function(dists, method) {
 #' @importFrom Rcpp sourceCpp
 #' @export
 consensus_matrix <- function(clusts,k) {
-    res <- consmx(clusts)
-    res<-calc_consensus(res,k)
-    #colnames(res) <- as.character(c(1:nrow(clusts)))
-    rownames(res) <- as.character(c(1:nrow(clusts)))
+    # coassociationMatrix <- consmx(clusts)
+    # colnames(coassociationMatrix)<-as.character(c(1:nrow(clusts)))
+    # rownames(coassociationMatrix)<-as.character(c(1:nrow(clusts)))
+    res = calc_consensus(clusts,k)
+    colnames(res)<-colnames(clusts)
+    res=kmeans(x=res, centers = k)
+    # res<-calc_consensus(coassociationMatrix,k)
+    #colnames(res) <- as.character(c(1:ncol(res)))
+    #rownames(res) <- as.character(c(1:nrow(res)))
     return(res)
 }
 
 #' Calculate consensus matrix2
 #'
-#' For each clustering solution a binary 
-#' similarity matrix is constructed from the corresponding cell labels: 
-#' if two cells belong to the same cluster, their similarity is 1, otherwise 
-#' the similarity is 0. A consensus matrix is calculated by averaging all 
+#' For each clustering solution a binary
+#' similarity matrix is constructed from the corresponding cell labels:
+#' if two cells belong to the same cluster, their similarity is 1, otherwise
+#' the similarity is 0. A consensus matrix is calculated by averaging all
 #' similarity matrices.
 #'
 #' @param matrix a matrix containing clustering solutions in columns
 #' @k number of clusters
 #' @return consensus matrix
-#' 
+#'
 calc_consensus<-function(matrix, k) {
   #constructing a binary matrix for the cluster identities n
   n = ncol(matrix)
@@ -115,14 +120,13 @@ calc_consensus<-function(matrix, k) {
   message("Calculating consensus matrix...")
   for (i in 1:n) {
     for (j in 1:c) {
-      #rowValue=matrix[j,i]+k*(j-1)
-      b[i,matrix[j,i]+k*(j-1)] + 1
+      value = matrix[j,i]+k*(j-1)
+      b[i,value] <- 1
     }
   }
-
-  inputMatrix=t(b)/n*c
+  
+  inputMatrix=t(b)/(n*c)
   #add tolerance at convergence=1e-10.
-  #res=kmeans(x=inputMatrix, centers = k)
   return (inputMatrix)
 }
 

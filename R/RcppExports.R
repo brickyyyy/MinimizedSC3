@@ -20,13 +20,24 @@ ED2 <- function(x) {
     .Call('_SC3min_ED2', PACKAGE = 'SC3min', x)
 }
 
-#' Consensus matrix computation
+#' Co-association matrix computation
 #' 
-#' Computes consensus matrix given cluster labels
+#' Computes co-association matrix given cluster labels
+#'res /= dat.n_cols;
 #' 
 #' @param dat a matrix containing clustering solutions in columns
 consmx <- function(dat) {
     .Call('_SC3min_consmx', PACKAGE = 'SC3min', dat)
+}
+
+#' Consensus matrix computation
+#' 
+#' Computes consensus matrix given a co-association matrix
+#' 
+#' @param matrix a matrix containing co-association matrix
+#' @param k number of clusters
+consensus <- function(matrix, k) {
+    .Call('_SC3min_consensus', PACKAGE = 'SC3min', matrix, k)
 }
 
 #' Graph Laplacian calculation

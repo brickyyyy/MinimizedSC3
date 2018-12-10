@@ -70,7 +70,7 @@ arma::mat consmx(const arma::mat dat) {
 			}
 		}
 	}
-	res /= dat.n_cols;
+	//res /= dat.n_cols;
 	return res;
 }
 

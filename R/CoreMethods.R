@@ -55,12 +55,12 @@ sc3min.SingleCellExperiment <- function(object, ks, gene_filter, pct_dropout_min
     object <- sc3min_calc_dists(object)
     object <- sc3min_calc_transfs(object)
     object <- sc3min_kmeans(object, ks)
-    object <- sc3min_calc_consens(object)
-    if (biology) {
-        object <- sc3min_calc_biology(object, ks)
-    }
-    return(object)
-}
+#     object <- sc3min_calc_consens(object)
+#     if (biology) {
+#         object <- sc3min_calc_biology(object, ks)
+#     }
+#     return(object)
+# }
 
 #' @rdname sc3min
 #' @aliases sc3min
