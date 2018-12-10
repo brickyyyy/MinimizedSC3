@@ -55,12 +55,12 @@ sc3min.SingleCellExperiment <- function(object, ks, gene_filter, pct_dropout_min
     object <- sc3min_calc_dists(object)
     object <- sc3min_calc_transfs(object)
     object <- sc3min_kmeans(object, ks)
-#     object <- sc3min_calc_consens(object)
-#     if (biology) {
-#         object <- sc3min_calc_biology(object, ks)
-#     }
-#     return(object)
-# }
+    object <- sc3min_calc_consens(object)
+    if (biology) {
+        object <- sc3min_calc_biology(object, ks)
+    }
+    return(object)
+}
 
 #' @rdname sc3min
 #' @aliases sc3min
@@ -546,35 +546,36 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
     
     cl <- parallel::makeCluster(n_cores, outfile = "")
     doParallel::registerDoParallel(cl, cores = n_cores)
-    
+
+
     cons <- foreach::foreach(i = ks) %dorng% {
         try({
-            d <- k.means[grep(paste0("_", i, "_"), names(k.means))]
-            d <- matrix(unlist(d), nrow = length(d[[1]]))
-            #calculate co-association matrix here
+           # d <- k.means[grep(paste0("_", i, "_"), names(k.means))]
+           #  d <- matrix(unlist(d), nrow = length(d[[1]]))
             
-            # coassociation <- coassociation_matrix(d)
-            # dat <- consensus_matrix2(coassociation,ks)
-            # #tmp <- ED2(dat)
-            #colnames(tmp) <- as.character(colnames(dat))
-            #rownames(tmp) <- as.character(colnames(dat))
-            #diss <- stats::as.dist(as.matrix(stats::as.dist(tmp)))
-            dat <- consensus_matrix(d,ks)
-            res=kmeans(x=dat, centers = k)
-            diss <- stats::as.dist(as.matrix(stats::as.dist(res)))
-          
+            matrix.cols<-names(k.means)
+            matrix.rows<-matrix(unlist(k.means), ncol = length(matrix.cols))
+            matrix.toCluster<-matrix.rows
+            colnames(matrix.toCluster)<-matrix.cols
+            res <- consensus_matrix(matrix.toCluster, ks)
+            dat<-matrix(data=res$cluster, ncol = length(res$cluster)/ks, nrow = ks) 
+            colnames(dat)<-c(1:(length(res$cluster)/ks))
+            rownames(dat)<-c(1:ks)
+            tmp <- ED2(dat)
+            diss <- stats::as.dist(as.matrix(stats::as.dist(tmp)))
+             
             hc <- stats::hclust(diss)
             clusts <- reindex_clusters(hc, i)
             
             silh <- cluster::silhouette(clusts, diss)
-            
+              
             list(consensus = dat, hc = hc, silhouette = silh)
         })
     }
     
     # stop local cluster
     parallel::stopCluster(cl)
-    
+
     names(cons) <- ks
     if(is.null(metadata(object)$sc3min$consensus)) {
         metadata(object)$sc3min$consensus <- list()
@@ -582,22 +583,22 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
     for (n in names(cons)) {
         metadata(object)$sc3min$consensus[[n]] <- cons[[n]]
     }
-    
-    # remove kmeans results after calculating consensus
+    metadata(object)$sc3min$bla<-cons
+    #remove kmeans results after calculating consensus
     metadata(object)$sc3min$kmeans <- NULL
-    
+
     p_data <- colData(object)
     for (k in ks) {
-        hc <- metadata(object)$sc3min$consensus[[as.character(k)]]$hc
+       hc <- metadata(object)$sc3min$consensus[[as.character(k)]]$hc
         clusts <- reindex_clusters(hc, k)
-        # in case of hybrid SVM approach
-        if (!is.null(metadata(object)$sc3min$svm_train_inds)) {
-            tmp <- rep(NA, nrow(p_data))
-            tmp[metadata(object)$sc3min$svm_train_inds] <- clusts
-            clusts <- tmp
-        }
-        p_data[, paste0("sc3min_", k, "_clusters")] <- factor(clusts, levels = sort(unique(clusts)))
-    }
+         # in case of hybrid SVM approach
+         if (!is.null(metadata(object)$sc3min$svm_train_inds)) {
+             tmp <- rep(NA, nrow(p_data))
+             tmp[metadata(object)$sc3min$svm_train_inds] <- clusts
+             clusts <- tmp
+         }
+         p_data[, paste0("sc3min_", k, "_clusters")] <- factor(clusts, levels = sort(unique(clusts)))
+     }
     colData(object) <- as(p_data, "DataFrame")
     
     return(object)
