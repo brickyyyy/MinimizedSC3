@@ -88,15 +88,9 @@ transformation <- function(dists, method) {
 #' @importFrom Rcpp sourceCpp
 #' @export
 consensus_matrix <- function(clusts,k) {
-    # coassociationMatrix <- consmx(clusts)
-    # colnames(coassociationMatrix)<-as.character(c(1:nrow(clusts)))
-    # rownames(coassociationMatrix)<-as.character(c(1:nrow(clusts)))
     res = calc_consensus(clusts,k)
     colnames(res)<-colnames(clusts)
     res=kmeans(x=res, centers = k)
-    # res<-calc_consensus(coassociationMatrix,k)
-    #colnames(res) <- as.character(c(1:ncol(res)))
-    #rownames(res) <- as.character(c(1:nrow(res)))
     return(res)
 }
 
@@ -128,6 +122,19 @@ calc_consensus<-function(matrix, k) {
   inputMatrix=t(b)/(n*c)
   #add tolerance at convergence=1e-10.
   return (inputMatrix)
+}
+
+FindSimilarities = function(v){
+  l = length(v)
+  df = matrix(0L,nrow = l, ncol = l)
+  for (i in 1:length(v)){
+    for (j in 1:length(v)){
+      if(v[i]==v[j]){
+        df[i,j]<-1  
+      }
+    }
+  }
+  return (df)
 }
 
 #' Run support vector machines (\code{SVM}) prediction

@@ -404,7 +404,7 @@ sc3min_calc_transfs.SingleCellExperiment <- function(object) {
     
     metadata(object)$sc3min$transformations <- transfs
     # remove distances after calculating transformations
-    metadata(object)$sc3min$distances <- NULL
+   # metadata(object)$sc3min$distances <- NULL
     return(object)
 }
 
@@ -558,10 +558,20 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
             matrix.toCluster<-matrix.rows
             colnames(matrix.toCluster)<-matrix.cols
             res <- consensus_matrix(matrix.toCluster, ks)
-            dat<-matrix(data=res$cluster, ncol = length(res$cluster)/ks, nrow = ks) 
-            colnames(dat)<-c(1:(length(res$cluster)/ks))
-            rownames(dat)<-c(1:ks)
-            tmp <- ED2(dat)
+            dat<-matrix(data=res$cluster, ncol = length(res$cluster)/ks, nrow = ks)
+            
+            # colnames(dat)<-c(1:(length(res$cluster)/ks))
+            # rownames(dat)<-c(1:ks)
+            # tmp <- ED2(dat)
+            
+            library(plyr)
+            toList = alply(dat,1)
+            allCons = lapply(toList,FUN = FindSimilarities)
+            dat = Reduce("+", allCons)
+            colnames(dat) = c(1:ncol(dat))
+            rownames(dat) = c(1:nrow(dat))
+            tmp = ED2(dat)
+            
             diss <- stats::as.dist(as.matrix(stats::as.dist(tmp)))
              
             hc <- stats::hclust(diss)
