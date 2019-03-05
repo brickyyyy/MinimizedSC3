@@ -36,6 +36,7 @@ filtering before sc3min clustering.}
 
 \item{d_region_min}{defines the minimum number of eigenvectors used for 
 kmeans clustering as a fraction of the total number of cells. Default is \code{0.04}.
+
 See \code{sc3min} paper for more details.}
 
 \item{d_region_max}{defines the maximum number of eigenvectors used for 
@@ -72,4 +73,5 @@ an object of \code{SingleCellExperiment} class
 }
 \description{
 This function is a wrapper that executes all steps of \code{sc3min} analysis in one go.
+
 }
