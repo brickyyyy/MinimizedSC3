@@ -50,7 +50,9 @@ The result of k-means for the Deng dataset is a list of 30 vectors with length e
 library(SC3min)
 dengMin = sc3min(deng, ks=10)
 kMeans = metadata(dengMin)$sc3min$kmeans
-kMeans[["euclidean_laplacian_10_10"]]
+kmeans1=kMeans[["euclidean_laplacian_10_10"]]
+kmeans1=FindSimilarities(kmeans1)
+pheatmap(kmeans1)
 ```
 ##Plot a couple of heatmaps for the different clustering results.
 ```{r}
@@ -76,6 +78,14 @@ cons = Reduce("+", allDf)
 # colnames(df) = c(1:ncol(df))
 # rownames(df) = c(1:nrow(df))
 pheatmap(cons)
+```
+##Check the size of the matrix after SEC 
+For the Deng dataset the matrix has a size 2680x30
+```{r}
+library(SC3min)
+dengMin = sc3min(deng, ks=10)
+cons1 = metadata(dengMin)$sc3min$consensus[["10"]][["test"]]
+pheatmap::pheatmap(cons1)
 ```
 ##Try to make similarity matrices and another consensus out of sc3min consensus
 ```{r}

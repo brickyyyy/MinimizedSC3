@@ -557,7 +557,8 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
             matrix.rows<-matrix(unlist(k.means), ncol = length(matrix.cols))
             matrix.toCluster<-matrix.rows
             colnames(matrix.toCluster)<-matrix.cols
-            res <- consensus_matrix(matrix.toCluster, ks)
+            res1 <- consensus_matrix(matrix.toCluster, ks)
+            res=kmeans(x=res1, centers = ks)
             dat<-matrix(data=res$cluster, ncol = length(res$cluster)/ks, nrow = ks)
             
             # colnames(dat)<-c(1:(length(res$cluster)/ks))
@@ -579,7 +580,7 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
             
             silh <- cluster::silhouette(clusts, diss)
               
-            list(consensus = dat, hc = hc, silhouette = silh)
+            list(test =res1 ,consensus = dat, hc = hc, silhouette = silh)
         })
     }
     
@@ -593,9 +594,8 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
     for (n in names(cons)) {
         metadata(object)$sc3min$consensus[[n]] <- cons[[n]]
     }
-    metadata(object)$sc3min$bla<-cons
     #remove kmeans results after calculating consensus
-    metadata(object)$sc3min$kmeans <- NULL
+   # metadata(object)$sc3min$kmeans <- NULL
 
     p_data <- colData(object)
     for (k in ks) {

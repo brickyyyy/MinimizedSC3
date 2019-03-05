@@ -4,7 +4,7 @@
 \alias{consensus_matrix}
 \title{Calculate consensus matrix}
 \usage{
-consensus_matrix(clusts)
+consensus_matrix(clusts, k)
 }
 \arguments{
 \item{clusts}{a matrix containing clustering solutions in columns}
