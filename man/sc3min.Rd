@@ -5,20 +5,19 @@
 \alias{sc3min}
 \alias{sc3min.SingleCellExperiment}
 \alias{sc3min,SingleCellExperiment-method}
-\alias{sc3min}
 \title{Run all steps of \code{sc3min} in one go}
 \usage{
 sc3min.SingleCellExperiment(object, ks, gene_filter, pct_dropout_min,
-  pct_dropout_max, d_region_min, d_region_max, svm_num_cells, svm_train_inds,
-  svm_max, n_cores, kmeans_nstart, kmeans_iter_max, k_estimator, biology,
-  rand_seed)
+  pct_dropout_max, d_region_min, d_region_max, svm_num_cells,
+  svm_train_inds, svm_max, n_cores, kmeans_nstart, kmeans_iter_max,
+  k_estimator, biology, rand_seed)
 
-\S4method{sc3min}{SingleCellExperiment}(object, ks = NULL, gene_filter = TRUE,
-  pct_dropout_min = 10, pct_dropout_max = 90, d_region_min = 0.04,
-  d_region_max = 0.07, svm_num_cells = NULL, svm_train_inds = NULL,
-  svm_max = 5000, n_cores = NULL, kmeans_nstart = NULL,
-  kmeans_iter_max = 1e+09, k_estimator = FALSE, biology = FALSE,
-  rand_seed = 1)
+\S4method{sc3min}{SingleCellExperiment}(object, ks = NULL,
+  gene_filter = TRUE, pct_dropout_min = 10, pct_dropout_max = 90,
+  d_region_min = 0.04, d_region_max = 0.07, svm_num_cells = NULL,
+  svm_train_inds = NULL, svm_max = 5000, n_cores = NULL,
+  kmeans_nstart = NULL, kmeans_iter_max = 1e+09, k_estimator = FALSE,
+  biology = FALSE, rand_seed = 1)
 }
 \arguments{
 \item{object}{an object of \code{SingleCellExperiment} class.}
@@ -37,7 +36,6 @@ filtering before sc3min clustering.}
 
 \item{d_region_min}{defines the minimum number of eigenvectors used for 
 kmeans clustering as a fraction of the total number of cells. Default is \code{0.04}.
-
 See \code{sc3min} paper for more details.}
 
 \item{d_region_max}{defines the maximum number of eigenvectors used for 
@@ -73,7 +71,5 @@ purposes.}
 an object of \code{SingleCellExperiment} class
 }
 \description{
-
 This function is a wrapper that executes all steps of \code{sc3min} analysis in one go.
-
 }

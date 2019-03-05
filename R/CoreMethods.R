@@ -2,7 +2,7 @@
 #' 
 #' This function is a wrapper that executes all steps of \code{sc3min} analysis in one go.
 #' 
-#' @param objects a list of objects of \code{SingleCellExperiment} class.
+#' @param object an object of \code{SingleCellExperiment} class.
 #' @param ks a range of the number of clusters \code{k} used for \code{sc3min} clustering.
 #' Can also be a single integer.
 #' @param gene_filter a boolen variable which defines whether to perform gene 
@@ -37,33 +37,29 @@
 #' @name sc3min
 #' @aliases sc3min
 #' 
-#' @return a list of objects of \code{SingleCellExperiment} class
-sc3min.SingleCellExperiment <- function(objects, ks, gene_filter, pct_dropout_min, pct_dropout_max, d_region_min, 
+#' @return an object of \code{SingleCellExperiment} class
+sc3min.SingleCellExperiment <- function(object, ks, gene_filter, pct_dropout_min, pct_dropout_max, d_region_min, 
                                         d_region_max, svm_num_cells, svm_train_inds, svm_max, n_cores, kmeans_nstart, kmeans_iter_max, 
                                         k_estimator, biology, rand_seed) {
-  #parallel go foreach object in objects
-  objects <- sc3min_prepare(objects, gene_filter, pct_dropout_min, pct_dropout_max, 
-                            d_region_min, d_region_max, svm_num_cells, svm_train_inds, svm_max, n_cores, kmeans_nstart, 
-                            kmeans_iter_max, rand_seed)
+  object <- sc3min_prepare(object, gene_filter, pct_dropout_min, pct_dropout_max, 
+                           d_region_min, d_region_max, svm_num_cells, svm_train_inds, svm_max, n_cores, kmeans_nstart, 
+                           kmeans_iter_max, rand_seed)
   if (k_estimator) {
-    objects <- sc3min_estimate_k(objects)
+    object <- sc3min_estimate_k(object)
     # Do not override cluster if user has set a k
-    ###!!!!REGISTER PARALLEL HERE
-    for (object in objects) {
-      if (is.null(ks))
-      {
-        ks <- metadata(object)$sc3min$k_estimation
-      }
+    if (is.null(ks))
+    {
+      ks <- metadata(object)$sc3min$k_estimation
     }
   }
-  objects <- sc3min_calc_dists(objects)
-  objects <- sc3min_calc_transfs(objects)
-  objects <- sc3min_kmeans(objects, ks)
-  objects <- sc3min_calc_consens(objects)
+  object <- sc3min_calc_dists(object)
+  object <- sc3min_calc_transfs(object)
+  object <- sc3min_kmeans(object, ks)
+  object <- sc3min_calc_consens(object)
   if (biology) {
-    objects <- sc3min_calc_biology(objects, ks)
+    object <- sc3min_calc_biology(object, ks)
   }
-  return(objects)
+  return(object)
 }
 
 #' @rdname sc3min
@@ -126,130 +122,128 @@ setMethod("sc3min", signature(object = "SingleCellExperiment"), sc3min.SingleCel
 #' @importFrom methods new
 #' @importFrom BiocGenerics counts
 #' @importFrom SingleCellExperiment isSpike
-sc3min_prepare.SingleCellExperiment <- function(objects, gene_filter, pct_dropout_min, pct_dropout_max, 
+sc3min_prepare.SingleCellExperiment <- function(object, gene_filter, pct_dropout_min, pct_dropout_max, 
                                                 d_region_min, d_region_max, svm_num_cells, svm_train_inds, svm_max, n_cores, kmeans_nstart, 
                                                 kmeans_iter_max, rand_seed) {
-  for (object in objects) {
-    if (is.null(rowData(object)$feature_symbol)) {
-      stop("There is no `feature_symbol` column in the `rowData` slot of your dataset! Please write your gene/transcript names to `rowData(object)$feature_symbol`!")
+  if (is.null(rowData(object)$feature_symbol)) {
+    stop("There is no `feature_symbol` column in the `rowData` slot of your dataset! Please write your gene/transcript names to `rowData(object)$feature_symbol`!")
+    return(object)
+  }
+  if (gene_filter == TRUE & !"counts" %in% assayNames(object)) {
+    stop("There is no `counts` slot in your input SingleCellExperiment object! sc3min requires the `counts` slot for gene filtering! Please write these values the slot by setting `counts(object) <- count_values`! Alternatively, you can set `gene_filter = FALSE` to switch off gene filtering.")
+    return(object)
+  }
+  if (!"logcounts" %in% assayNames(object)) {
+    stop("There is no `logcounts` slot in your input SingleCellExperiment object! sc3min operates on `logcounts` slot, which is supposed to contain both normalised and log-transformed expression values! Please write these values the slot by setting `logcounts(object) <- log_norm_counts`!")
+    return(object)
+  }
+  
+  message("Setting sc3min parameters...")
+  
+  # clean up after the previous sc3min run sc3min slot
+  metadata(object)$sc3min <- list()
+  colData(object) <- colData(object)[, !grepl("sc3min_", colnames(colData(object))), drop = FALSE]
+  rowData(object) <- rowData(object)[, !grepl("sc3min_", colnames(rowData(object))), drop = FALSE]
+  
+  # gene filter
+  f_data <- rowData(object)
+  f_data$sc3min_gene_filter <- TRUE
+  if (gene_filter) {
+    dropouts <- rowSums(counts(object) == 0)/ncol(object)*100
+    if(!is.null(isSpike(object))) {
+      f_data$sc3min_gene_filter <- dropouts < pct_dropout_max & dropouts > pct_dropout_min & !isSpike(object)
+    } else {
+      f_data$sc3min_gene_filter <- dropouts < pct_dropout_max & dropouts > pct_dropout_min
+    }
+    if (all(!f_data$sc3min_gene_filter)) {
+      stop("All genes were removed after the gene filter! Please check the `counts` slot of the `SingleCellExperiment` object. It has to contain zeros, where no gene expression was detected. Alternatively, you can set `gene_filter = FALSE` to switch off gene filtering.")
       return(object)
     }
-    if (gene_filter == TRUE & !"counts" %in% assayNames(object)) {
-      stop("There is no `counts` slot in your input SingleCellExperiment object! sc3min requires the `counts` slot for gene filtering! Please write these values the slot by setting `counts(object) <- count_values`! Alternatively, you can set `gene_filter = FALSE` to switch off gene filtering.")
-      return(object)
+  }
+  rowData(object) <- as(f_data, "DataFrame")
+  
+  metadata(object)$sc3min$kmeans_iter_max <- kmeans_iter_max
+  if (is.null(kmeans_nstart)) {
+    if (ncol(object) > 2000) {
+      metadata(object)$sc3min$kmeans_nstart <- 50
+      message("Your dataset contains more than 2000 cells. Adjusting the nstart parameter of kmeans to 50 for faster performance...")
+    } else {
+      metadata(object)$sc3min$kmeans_nstart <- 1000
     }
-    if (!"logcounts" %in% assayNames(object)) {
-      stop("There is no `logcounts` slot in your input SingleCellExperiment object! sc3min operates on `logcounts` slot, which is supposed to contain both normalised and log-transformed expression values! Please write these values the slot by setting `logcounts(object) <- log_norm_counts`!")
-      return(object)
-    }
-    
-    message("Setting sc3min parameters...")
-    
-    # clean up after the previous sc3min run sc3min slot
-    metadata(object)$sc3min <- list()
-    colData(object) <- colData(object)[, !grepl("sc3min_", colnames(colData(object))), drop = FALSE]
-    rowData(object) <- rowData(object)[, !grepl("sc3min_", colnames(rowData(object))), drop = FALSE]
-    
-    # gene filter
-    f_data <- rowData(object)
-    f_data$sc3min_gene_filter <- TRUE
-    if (gene_filter) {
-      dropouts <- rowSums(counts(object) == 0)/ncol(object)*100
-      if(!is.null(isSpike(object))) {
-        f_data$sc3min_gene_filter <- dropouts < pct_dropout_max & dropouts > pct_dropout_min & !isSpike(object)
-      } else {
-        f_data$sc3min_gene_filter <- dropouts < pct_dropout_max & dropouts > pct_dropout_min
+  } else {
+    metadata(object)$sc3min$kmeans_nstart <- kmeans_nstart
+  }
+  
+  # define number of cells and region of dimensions
+  n_dim <- floor(d_region_min * ncol(object)):ceiling(d_region_max * ncol(object))
+  # for large datasets restrict the region of dimensions to 15
+  if (length(n_dim) > 15) {
+    n_dim <- sample(n_dim, 15)
+  }
+  
+  # prepare for SVM
+  if (!is.null(svm_num_cells) | !is.null(svm_train_inds) | ncol(object) > svm_max) {
+    # handle all possible errors
+    if (!is.null(svm_num_cells)) {
+      if (!is.null(svm_train_inds)) {
+        return(message("You have set both svm_num_cells and svm_train_inds parameters for SVM training. Please set only one of them and rerun sc3min_prepare()."))
       }
-      if (all(!f_data$sc3min_gene_filter)) {
-        stop("All genes were removed after the gene filter! Please check the `counts` slot of the `SingleCellExperiment` object. It has to contain zeros, where no gene expression was detected. Alternatively, you can set `gene_filter = FALSE` to switch off gene filtering.")
-        return(object)
+      if (svm_num_cells >= ncol(object) - 1) 
+        return(message("Number of cells used for SVM training is larger (or equal) than the total number of cells in your dataset. Please make svm_num_cells parameter smaller and rerun sc3min_prepare()."))
+      if (svm_num_cells < 10) {
+        return(message("Number of cells used for SVM training is less than 10. Please make sure the number of clusters k is smaller than 10 or increase the number of training cells."))
       }
     }
-    rowData(object) <- as(f_data, "DataFrame")
+    if (!is.null(svm_train_inds)) {
+      if (length(svm_train_inds) < 10) {
+        return(message("Number of cells used for SVM training is less than 10. Please make sure the number of clusters k is smaller than 10 or increase the number of training cells."))
+      }
+      if (max(svm_train_inds) > ncol(object) - 1) {
+        return(message("Number of cells used for SVM training is larger than the total number of cells in your dataset. Please adjust svm_train_inds parameter and rerun sc3min_prepare()."))
+      }
+    }
+    # run SVM
+    tmp <- prepare_for_svm(ncol(object), svm_num_cells, svm_train_inds, svm_max)
     
-    metadata(object)$sc3min$kmeans_iter_max <- kmeans_iter_max
+    metadata(object)$sc3min$svm_train_inds <- tmp$svm_train_inds
+    metadata(object)$sc3min$svm_study_inds <- tmp$svm_study_inds
+    
+    # update kmeans_nstart after defining SVM training indeces
     if (is.null(kmeans_nstart)) {
-      if (ncol(object) > 2000) {
-        metadata(object)$sc3min$kmeans_nstart <- 50
-        message("Your dataset contains more than 2000 cells. Adjusting the nstart parameter of kmeans to 50 for faster performance...")
-      } else {
+      if (length(tmp$svm_train_inds) <= 2000) {
         metadata(object)$sc3min$kmeans_nstart <- 1000
       }
     } else {
       metadata(object)$sc3min$kmeans_nstart <- kmeans_nstart
     }
     
-    # define number of cells and region of dimensions
-    n_dim <- floor(d_region_min * ncol(object)):ceiling(d_region_max * ncol(object))
+    # update the region of dimensions
+    n_dim <- floor(d_region_min * length(tmp$svm_train_inds)):ceiling(d_region_max * length(tmp$svm_train_inds))
     # for large datasets restrict the region of dimensions to 15
     if (length(n_dim) > 15) {
       n_dim <- sample(n_dim, 15)
     }
-    
-    # prepare for SVM
-    if (!is.null(svm_num_cells) | !is.null(svm_train_inds) | ncol(object) > svm_max) {
-      # handle all possible errors
-      if (!is.null(svm_num_cells)) {
-        if (!is.null(svm_train_inds)) {
-          return(message("You have set both svm_num_cells and svm_train_inds parameters for SVM training. Please set only one of them and rerun sc3min_prepare()."))
-        }
-        if (svm_num_cells >= ncol(object) - 1) 
-          return(message("Number of cells used for SVM training is larger (or equal) than the total number of cells in your dataset. Please make svm_num_cells parameter smaller and rerun sc3min_prepare()."))
-        if (svm_num_cells < 10) {
-          return(message("Number of cells used for SVM training is less than 10. Please make sure the number of clusters k is smaller than 10 or increase the number of training cells."))
-        }
-      }
-      if (!is.null(svm_train_inds)) {
-        if (length(svm_train_inds) < 10) {
-          return(message("Number of cells used for SVM training is less than 10. Please make sure the number of clusters k is smaller than 10 or increase the number of training cells."))
-        }
-        if (max(svm_train_inds) > ncol(object) - 1) {
-          return(message("Number of cells used for SVM training is larger than the total number of cells in your dataset. Please adjust svm_train_inds parameter and rerun sc3min_prepare()."))
-        }
-      }
-      # run SVM
-      tmp <- prepare_for_svm(ncol(object), svm_num_cells, svm_train_inds, svm_max)
-      
-      metadata(object)$sc3min$svm_train_inds <- tmp$svm_train_inds
-      metadata(object)$sc3min$svm_study_inds <- tmp$svm_study_inds
-      
-      # update kmeans_nstart after defining SVM training indeces
-      if (is.null(kmeans_nstart)) {
-        if (length(tmp$svm_train_inds) <= 2000) {
-          metadata(object)$sc3min$kmeans_nstart <- 1000
-        }
-      } else {
-        metadata(object)$sc3min$kmeans_nstart <- kmeans_nstart
-      }
-      
-      # update the region of dimensions
-      n_dim <- floor(d_region_min * length(tmp$svm_train_inds)):ceiling(d_region_max * length(tmp$svm_train_inds))
-      # for large datasets restrict the region of dimensions to 15
-      if (length(n_dim) > 15) {
-        n_dim <- sample(n_dim, 15)
-      }
-    }
-    
-    metadata(object)$sc3min$n_dim <- n_dim
-    
-    metadata(object)$sc3min$rand_seed <- rand_seed
-    
-    # register computing cluster (N-1 CPUs) on a local machine
-    if (is.null(n_cores)) {
-      n_cores <- parallel::detectCores()
-      if (is.null(n_cores)) {
-        return("Cannot define a number of available CPU cores that can be used by sc3min. Try to set the n_cores parameter in the sc3min() function call.")
-      }
-      # leave one core for the user
-      if (n_cores > 1) {
-        n_cores <- n_cores - 1
-      }
-    }
-    
-    metadata(object)$sc3min$n_cores <- n_cores
-    
   }
-  return(objects)
+  
+  metadata(object)$sc3min$n_dim <- n_dim
+  
+  metadata(object)$sc3min$rand_seed <- rand_seed
+  
+  # register computing cluster (N-1 CPUs) on a local machine
+  if (is.null(n_cores)) {
+    n_cores <- parallel::detectCores()
+    if (is.null(n_cores)) {
+      return("Cannot define a number of available CPU cores that can be used by sc3min. Try to set the n_cores parameter in the sc3min() function call.")
+    }
+    # leave one core for the user
+    if (n_cores > 1) {
+      n_cores <- n_cores - 1
+    }
+  }
+  
+  metadata(object)$sc3min$n_cores <- n_cores
+  
+  return(object)
 }
 
 #' @rdname sc3min_prepare
@@ -299,17 +293,12 @@ setMethod("sc3min_estimate_k", signature(object = "SingleCellExperiment"), sc3mi
 #' @importFrom foreach foreach %dopar%
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
-sc3min_calc_dists.SingleCellExperiment <- function(objects) {
-  datasets = list()
-  for (object in objects) {
-    datasets[[object]] <- get_processed_dataset(objects[[object]])
-  }
+sc3min_calc_dists.SingleCellExperiment <- function(object) {
+  dataset <- get_processed_dataset(object)
   
   # check whether in the SVM regime
-  for (object in objects) {
-    if (!is.null(metadata(object)$sc3min$svm_train_inds)) {
-      datasets[[object]] <- datasets[[object]][, metadata(objects[[object]])$sc3min$svm_train_inds]
-    }
+  if (!is.null(metadata(object)$sc3min$svm_train_inds)) {
+    dataset <- dataset[, metadata(object)$sc3min$svm_train_inds]
   }
   
   # NULLing the variables to avoid notes in R CMD CHECK
@@ -319,32 +308,29 @@ sc3min_calc_dists.SingleCellExperiment <- function(objects) {
   
   message("Calculating distances between the cells...")
   
-  for (object in objects) {
-    if (metadata(objects[[object]])$sc3min$n_cores > length(distances)) {
-      n_cores <- length(distances)
-    } else {
-      n_cores <- metadata(objects[[object]])$sc3min$n_cores
-    }
+  if (metadata(object)$sc3min$n_cores > length(distances)) {
+    n_cores <- length(distances)
+  } else {
+    n_cores <- metadata(object)$sc3min$n_cores
   }
   
-  for (object in objects) {
-    cl <- parallel::makeCluster(n_cores, outfile = "")
-    doParallel::registerDoParallel(cl, cores = n_cores)
-    
-    # calculate distances in parallel
-    dists <- foreach::foreach(i = distances) %dorng% {
-      try({
-        calculate_distance(datasets[[object]], i)
-      })
-    }
-    
-    # stop local cluster
-    parallel::stopCluster(cl)
-    
-    names(dists) <- distances
-    metadata(objects[[object]])$sc3min$distances <- dists
+  cl <- parallel::makeCluster(n_cores, outfile = "")
+  doParallel::registerDoParallel(cl, cores = n_cores)
+  
+  # calculate distances in parallel
+  dists <- foreach::foreach(i = distances) %dorng% {
+    try({
+      calculate_distance(dataset, i)
+    })
   }
-  return(objects)
+  
+  # stop local cluster
+  parallel::stopCluster(cl)
+  
+  names(dists) <- distances
+  
+  metadata(object)$sc3min$distances <- dists
+  return(object)
 }
 
 #' @rdname sc3min_calc_dists
@@ -374,53 +360,52 @@ setMethod("sc3min_calc_dists", signature(object = "SingleCellExperiment"), sc3mi
 #' @importFrom foreach foreach
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
-sc3min_calc_transfs.SingleCellExperiment <- function(objects) {
-  for (object in objects) {
-    dists <- metadata(objects[[object]])$sc3min$distances
-    if (is.null(dists)) {
-      stop(paste0("Please run sc3min_calc_dists() first!"))
-      return(object)
-    }
-    
-    # NULLing the variables to avoid notes in R CMD CHECK
-    i <- NULL
-    
-    distances <- names(dists)
-    transformations <- c("laplacian")
-    
-    n_dim <- metadata(objects[[object]])$sc3min$n_dim
-    
-    hash.table <- expand.grid(dists = distances, transfs = transformations, stringsAsFactors = FALSE)
-    
-    message("Performing transformations and calculating eigenvectors...")
-    
-    if (metadata(objects[[object]])$sc3min$n_cores > nrow(hash.table)) {
-      n_cores <- nrow(hash.table)
-    } else {
-      n_cores <- metadata(objects[[object]])$sc3min$n_cores
-    }
-    
-    cl <- parallel::makeCluster(n_cores, outfile = "")
-    doParallel::registerDoParallel(cl, cores = n_cores)
-    
-    #calculate the 3 distinct transformations in parallel.
-    transfs <- foreach::foreach(i = 1:nrow(hash.table)) %dorng% {
-      try({
-        tmp <- transformation(get(hash.table[i, 1], dists), hash.table[i, 2])
-        tmp[, 1:max(n_dim)]
-      })
-    }
-    
-    # stop local cluster
-    parallel::stopCluster(cl)
-    
-    names(transfs) <- paste(hash.table[, 1], hash.table[, 2], sep = "_")
-    
-    metadata(object)$sc3min$transformations <- transfs
-    # remove distances after calculating transformations
-    # metadata(object)$sc3min$distances <- NULL
+sc3min_calc_transfs.SingleCellExperiment <- function(object) {
+  dists <- metadata(object)$sc3min$distances
+  if (is.null(dists)) {
+    stop(paste0("Please run sc3min_calc_dists() first!"))
+    return(object)
   }
-  return(objects)
+  
+  # NULLing the variables to avoid notes in R CMD CHECK
+  i <- NULL
+  
+  distances <- names(dists)
+  transformations <- c("laplacian")
+  
+  n_dim <- metadata(object)$sc3min$n_dim
+  
+  hash.table <- expand.grid(dists = distances, transfs = transformations, stringsAsFactors = FALSE)
+  
+  message("Performing transformations and calculating eigenvectors...")
+  
+  if (metadata(object)$sc3min$n_cores > nrow(hash.table)) {
+    n_cores <- nrow(hash.table)
+  } else {
+    n_cores <- metadata(object)$sc3min$n_cores
+  }
+  
+  cl <- parallel::makeCluster(n_cores, outfile = "")
+  doParallel::registerDoParallel(cl, cores = n_cores)
+  
+  # calculate the 6 distinct transformations in parallel
+  #calculate 3 distances in the minimized case.
+  transfs <- foreach::foreach(i = 1:nrow(hash.table)) %dorng% {
+    try({
+      tmp <- transformation(get(hash.table[i, 1], dists), hash.table[i, 2])
+      tmp[, 1:max(n_dim)]
+    })
+  }
+  
+  # stop local cluster
+  parallel::stopCluster(cl)
+  
+  names(transfs) <- paste(hash.table[, 1], hash.table[, 2], sep = "_")
+  
+  metadata(object)$sc3min$transformations <- transfs
+  # remove distances after calculating transformations
+  # metadata(object)$sc3min$distances <- NULL
+  return(object)
 }
 
 #' @rdname sc3min_calc_transfs
@@ -523,6 +508,7 @@ setMethod("sc3min_kmeans", signature(object = "SingleCellExperiment"), sc3min_km
 #' and have the following format: \code{sc3min_k_clusters}, where \code{k} is the 
 #' number of clusters.
 #' 
+
 #' @name sc3min_calc_consens
 #' @aliases sc3min_calc_consens, sc3min_calc_consens,SingleCellExperiment-method
 #' 

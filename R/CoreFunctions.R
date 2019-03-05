@@ -90,7 +90,7 @@ transformation <- function(dists, method) {
 consensus_matrix <- function(clusts,k) {
     res = calc_consensus(clusts,k)
     colnames(res)<-colnames(clusts)
-    res=kmeans(x=res, centers = k)
+    #res=kmeans(x=res, centers = k)
     return(res)
 }
 
@@ -103,7 +103,7 @@ consensus_matrix <- function(clusts,k) {
 #' similarity matrices.
 #'
 #' @param matrix a matrix containing clustering solutions in columns
-#' @k number of clusters
+#' @param k number of clusters
 #' @return consensus matrix
 #'
 calc_consensus<-function(matrix, k) {

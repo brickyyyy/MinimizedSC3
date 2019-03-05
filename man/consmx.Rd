@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{consmx}
 \alias{consmx}
-\title{Consensus matrix computation}
+\title{Co-association matrix computation}
 \usage{
 consmx(dat)
 }
@@ -10,5 +10,6 @@ consmx(dat)
 \item{dat}{a matrix containing clustering solutions in columns}
 }
 \description{
-Computes consensus matrix given cluster labels
+Computes co-association matrix given cluster labels
+res /= dat.n_cols;
 }
