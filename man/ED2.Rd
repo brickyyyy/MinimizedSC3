@@ -10,6 +10,6 @@ ED2(x)
 \item{x}{A numeric matrix.}
 }
 \description{
-Used in sc3-funcs.R distance matrix calculation
+Used in sc3min-funcs.R distance matrix calculation
 and within the consensus clustering.
 }

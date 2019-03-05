@@ -87,11 +87,54 @@ transformation <- function(dists, method) {
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
 #' @export
-consensus_matrix <- function(clusts) {
-    res <- consmx(clusts)
-    colnames(res) <- as.character(c(1:nrow(clusts)))
-    rownames(res) <- as.character(c(1:nrow(clusts)))
+consensus_matrix <- function(clusts,k) {
+    res = calc_consensus(clusts,k)
+    colnames(res)<-colnames(clusts)
+    res=kmeans(x=res, centers = k)
     return(res)
+}
+
+#' Calculate consensus matrix2
+#'
+#' For each clustering solution a binary
+#' similarity matrix is constructed from the corresponding cell labels:
+#' if two cells belong to the same cluster, their similarity is 1, otherwise
+#' the similarity is 0. A consensus matrix is calculated by averaging all
+#' similarity matrices.
+#'
+#' @param matrix a matrix containing clustering solutions in columns
+#' @k number of clusters
+#' @return consensus matrix
+#'
+calc_consensus<-function(matrix, k) {
+  #constructing a binary matrix for the cluster identities n
+  n = ncol(matrix)
+  c = nrow(matrix)
+  b = matrix(0L,nrow = n,ncol = c*k)
+  message("Calculating consensus matrix...")
+  for (i in 1:n) {
+    for (j in 1:c) {
+      value = matrix[j,i]+k*(j-1)
+      b[i,value] <- 1
+    }
+  }
+  
+  inputMatrix=t(b)/(n*c)
+  #add tolerance at convergence=1e-10.
+  return (inputMatrix)
+}
+
+FindSimilarities = function(v){
+  l = length(v)
+  df = matrix(0L,nrow = l, ncol = l)
+  for (i in 1:length(v)){
+    for (j in 1:length(v)){
+      if(v[i]==v[j]){
+        df[i,j]<-1  
+      }
+    }
+  }
+  return (df)
 }
 
 #' Run support vector machines (\code{SVM}) prediction

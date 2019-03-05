@@ -49,9 +49,10 @@ Rcpp::NumericMatrix ED2(const Rcpp::NumericMatrix & x) {
 	return out;
 }
 
-//' Consensus matrix computation
+//' Co-association matrix computation
 //' 
-//' Computes consensus matrix given cluster labels
+//' Computes co-association matrix given cluster labels
+//'res /= dat.n_cols;
 //' 
 //' @param dat a matrix containing clustering solutions in columns
 // [[Rcpp::export]]
@@ -70,9 +71,34 @@ arma::mat consmx(const arma::mat dat) {
 			}
 		}
 	}
-	res /= dat.n_cols;
 	return res;
 }
+
+//' Consensus matrix computation
+//' 
+//' Computes consensus matrix given a co-association matrix
+//' 
+//' @param matrix a matrix containing co-association matrix
+//' @param k number of clusters
+// [[Rcpp::export]]
+   arma::mat consensus(const arma::mat matrix, int k){
+	int n = matrix.n_cols;
+	int c = matrix.n_rows;
+	
+	mat b = mat(n,c*k,fill::zeros);
+	int i , j;
+	for(i = 0; i < matrix.n_cols; i++){
+		for(j = 0; j < matrix.n_rows ; j++){
+	     b(i, matrix(j,i)+k*(j-1)) = 1;
+		}
+    }
+	mat res = b.t() / n*c;
+  //'add tolerance at convergence=1e-10.
+  return (res);
+}
+
+
+
 
 //' Graph Laplacian calculation
 //' 
