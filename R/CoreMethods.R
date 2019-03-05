@@ -405,7 +405,11 @@ sc3min_calc_transfs.SingleCellExperiment <- function(object) {
     metadata(object)$sc3min$transformations <- transfs
     # remove distances after calculating transformations
 <<<<<<< HEAD
+<<<<<<< HEAD
     metadata(object)$sc3min$distances <- NULL
+=======
+   # metadata(object)$sc3min$distances <- NULL
+>>>>>>> 89837701c4631b9d6269c1c876c1781b1993cd84
 =======
    # metadata(object)$sc3min$distances <- NULL
 >>>>>>> 89837701c4631b9d6269c1c876c1781b1993cd84
@@ -598,6 +602,7 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
         metadata(object)$sc3min$consensus[[n]] <- cons[[n]]
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
     
     # remove kmeans results after calculating consensus
     metadata(object)$sc3min$kmeans <- NULL
@@ -623,6 +628,16 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
     for (k in ks) {
        hc <- metadata(object)$sc3min$consensus[[as.character(k)]]$hc
         clusts <- reindex_clusters(hc, k)
+=======
+    metadata(object)$sc3min$bla<-cons
+    #remove kmeans results after calculating consensus
+    metadata(object)$sc3min$kmeans <- NULL
+
+    p_data <- colData(object)
+    for (k in ks) {
+       hc <- metadata(object)$sc3min$consensus[[as.character(k)]]$hc
+        clusts <- reindex_clusters(hc, k)
+>>>>>>> 89837701c4631b9d6269c1c876c1781b1993cd84
          # in case of hybrid SVM approach
          if (!is.null(metadata(object)$sc3min$svm_train_inds)) {
              tmp <- rep(NA, nrow(p_data))
@@ -631,6 +646,9 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
          }
          p_data[, paste0("sc3min_", k, "_clusters")] <- factor(clusts, levels = sort(unique(clusts)))
      }
+<<<<<<< HEAD
+>>>>>>> 89837701c4631b9d6269c1c876c1781b1993cd84
+=======
 >>>>>>> 89837701c4631b9d6269c1c876c1781b1993cd84
     colData(object) <- as(p_data, "DataFrame")
     
