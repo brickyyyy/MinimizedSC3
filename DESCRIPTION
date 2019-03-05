@@ -1,4 +1,4 @@
-Package: SC3min
+Package: sc3min
 Type: Package
 Title: Minimized Single-Cell Consensus Clustering
 Version: 1.0.1
