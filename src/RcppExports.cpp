@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // ED1
 arma::mat ED1(const arma::mat& x);
-RcppExport SEXP _SC3_ED1(SEXP xSEXP) {
+RcppExport SEXP _SC3min_ED1(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -19,7 +19,7 @@ END_RCPP
 }
 // ED2
 Rcpp::NumericMatrix ED2(const Rcpp::NumericMatrix& x);
-RcppExport SEXP _SC3_ED2(SEXP xSEXP) {
+RcppExport SEXP _SC3min_ED2(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,7 +30,7 @@ END_RCPP
 }
 // consmx
 arma::mat consmx(const arma::mat dat);
-RcppExport SEXP _SC3_consmx(SEXP datSEXP) {
+RcppExport SEXP _SC3min_consmx(SEXP datSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,9 +39,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// consensus
+arma::mat consensus(const arma::mat matrix, int k);
+RcppExport SEXP _SC3min_consensus(SEXP matrixSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat >::type matrix(matrixSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(consensus(matrix, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // norm_laplacian
 arma::mat norm_laplacian(arma::mat A);
-RcppExport SEXP _SC3_norm_laplacian(SEXP ASEXP) {
+RcppExport SEXP _SC3min_norm_laplacian(SEXP ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -52,7 +64,7 @@ END_RCPP
 }
 // tmult
 arma::mat tmult(arma::mat x);
-RcppExport SEXP _SC3_tmult(SEXP xSEXP) {
+RcppExport SEXP _SC3min_tmult(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -63,15 +75,16 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_SC3_ED1", (DL_FUNC) &_SC3_ED1, 1},
-    {"_SC3_ED2", (DL_FUNC) &_SC3_ED2, 1},
-    {"_SC3_consmx", (DL_FUNC) &_SC3_consmx, 1},
-    {"_SC3_norm_laplacian", (DL_FUNC) &_SC3_norm_laplacian, 1},
-    {"_SC3_tmult", (DL_FUNC) &_SC3_tmult, 1},
+    {"_SC3min_ED1", (DL_FUNC) &_SC3min_ED1, 1},
+    {"_SC3min_ED2", (DL_FUNC) &_SC3min_ED2, 1},
+    {"_SC3min_consmx", (DL_FUNC) &_SC3min_consmx, 1},
+    {"_SC3min_consensus", (DL_FUNC) &_SC3min_consensus, 2},
+    {"_SC3min_norm_laplacian", (DL_FUNC) &_SC3min_norm_laplacian, 1},
+    {"_SC3min_tmult", (DL_FUNC) &_SC3min_tmult, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_SC3(DllInfo *dll) {
+RcppExport void R_init_SC3min(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

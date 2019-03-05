@@ -16,8 +16,7 @@ transformation(dists, method)
 transformed distance matrix
 }
 \description{
-All distance matrices are transformed using either principal component 
-analysis (PCA) or by calculating the 
+All distance matrices are transformed by calculating the 
 eigenvectors of the graph Laplacian (Spectral). 
 The columns of the resulting matrices are then sorted in 
 descending order by their corresponding eigenvalues.

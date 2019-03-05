@@ -7,7 +7,7 @@
 #' 
 #' @param x A numeric matrix.
 ED1 <- function(x) {
-    .Call('_SC3_ED1', PACKAGE = 'SC3', x)
+    .Call('_SC3min_ED1', PACKAGE = 'SC3min', x)
 }
 
 #' Compute Euclidean distance matrix by columns
@@ -17,16 +17,27 @@ ED1 <- function(x) {
 #' 
 #' @param x A numeric matrix.
 ED2 <- function(x) {
-    .Call('_SC3_ED2', PACKAGE = 'SC3', x)
+    .Call('_SC3min_ED2', PACKAGE = 'SC3min', x)
+}
+
+#' Co-association matrix computation
+#' 
+#' Computes co-association matrix given cluster labels
+#'res /= dat.n_cols;
+#' 
+#' @param dat a matrix containing clustering solutions in columns
+consmx <- function(dat) {
+    .Call('_SC3min_consmx', PACKAGE = 'SC3min', dat)
 }
 
 #' Consensus matrix computation
 #' 
-#' Computes consensus matrix given cluster labels
+#' Computes consensus matrix given a co-association matrix
 #' 
-#' @param dat a matrix containing clustering solutions in columns
-consmx <- function(dat) {
-    .Call('_SC3_consmx', PACKAGE = 'SC3', dat)
+#' @param matrix a matrix containing co-association matrix
+#' @param k number of clusters
+consensus <- function(matrix, k) {
+    .Call('_SC3min_consensus', PACKAGE = 'SC3min', matrix, k)
 }
 
 #' Graph Laplacian calculation
@@ -36,7 +47,7 @@ consmx <- function(dat) {
 #' @param A symmetric matrix
 #' @export
 norm_laplacian <- function(A) {
-    .Call('_SC3_norm_laplacian', PACKAGE = 'SC3', A)
+    .Call('_SC3min_norm_laplacian', PACKAGE = 'SC3min', A)
 }
 
 #' Matrix left-multiplied by its transpose
@@ -45,6 +56,6 @@ norm_laplacian <- function(A) {
 #' 
 #' @param x Numeric matrix.
 tmult <- function(x) {
-    .Call('_SC3_tmult', PACKAGE = 'SC3', x)
+    .Call('_SC3min_tmult', PACKAGE = 'SC3min', x)
 }
 
