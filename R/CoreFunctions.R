@@ -30,13 +30,13 @@
 #' @importFrom Rcpp sourceCpp
 #'
 calculate_distance <- function(data, method) {
-    return(if (method == "spearman") {
-        as.matrix(1 - cor(data, method = "spearman"))
-    } else if (method == "pearson") {
-        as.matrix(1 - cor(data, method = "pearson"))
-    } else {
-        ED2(data)
-    })
+  return(if (method == "spearman") {
+    as.matrix(1 - cor(data, method = "spearman"))
+  } else if (method == "pearson") {
+    as.matrix(1 - cor(data, method = "pearson"))
+  } else {
+    ED2(data)
+  })
 }
 
 #' Distance matrix transformation
