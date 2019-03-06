@@ -289,6 +289,7 @@ setMethod("sc3min_estimate_k", signature(object = "SingleCellExperiment"), sc3mi
 #' 
 #' @return an object of \code{SingleCellExperiment} class
 #' 
+#' @useDynLib sc3min
 #' @importFrom doRNG %dorng%
 #' @importFrom foreach foreach %dopar%
 #' @importFrom parallel makeCluster stopCluster
