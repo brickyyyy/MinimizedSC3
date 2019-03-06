@@ -40,7 +40,7 @@ colnames(mat) = cols
 ```
 Work with part of matrix only
 ```{r echo=TRUE, eval=TRUE,cache=FALSE,include=TRUE}
-mat = mat[,c(1:2000)]
+mat = mat[,c(1:1000)]
 ```
 
 Create a SingleCell Experiment object.
@@ -66,7 +66,7 @@ Estimate number of clusters (k) for sc3Min on the scATAC-seq data.
 ```
 Run sc3min on the sc-ATAC data with 12 ks.
 ```{r}
-library(SC3min)
+library(sc3min)
 sce = sc3min(sce, ks=12)
 ```
 Plot result of consensus. 

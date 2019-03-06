@@ -28,6 +28,7 @@
 #' 
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
+#' @export
 #'
 calculate_distance <- function(data, method) {
   return(if (method == "spearman") {
