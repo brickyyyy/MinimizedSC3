@@ -23,12 +23,12 @@
 #' @param data expression matrix
 #' @param method one of the distance metrics: 'spearman', 'pearson', 'euclidean'
 #' @return distance matrix
-#'
-#' @importFrom stats cor dist
 #' 
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats cor dist
 #' @export
+#' 
 calculate_distance <- function(data, method) {
   return(if (method == "spearman") {
     as.matrix(1 - cor(data, method = "spearman"))
@@ -88,6 +88,7 @@ transformation <- function(dists, method) {
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
 #' @export
+#' 
 consensus_matrix <- function(clusts,k) {
   res = calc_consensus(clusts,k)
   colnames(res)<-colnames(clusts)
