@@ -518,6 +518,7 @@ setMethod("sc3min_kmeans", signature(object = "SingleCellExperiment"), sc3min_km
 #' 
 #' @importFrom doRNG %dorng%
 #' @importFrom foreach foreach
+#' @import plyr
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
 #' @import cluster
@@ -565,8 +566,7 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
       # rownames(dat)<-c(1:ks)
       # tmp <- ED2(dat)
       
-      library(plyr)
-      toList = alply(dat,1)
+      toList = plyr::alply(dat,1)
       allCons = lapply(toList,FUN = FindSimilarities)
       dat = Reduce("+", allCons)
       colnames(dat) = c(1:ncol(dat))

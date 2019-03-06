@@ -82,10 +82,10 @@ transformation <- function(dists, method) {
 #' similarity matrices.
 #'
 #' @param clusts a matrix containing clustering solutions in columns
+#' @param k number of clusters
 #' @return consensus matrix
 #' 
 #' @useDynLib sc3min
-#' @importFrom Rcpp sourceCpp
 #' @export
 consensus_matrix <- function(clusts,k) {
     res = calc_consensus(clusts,k)
