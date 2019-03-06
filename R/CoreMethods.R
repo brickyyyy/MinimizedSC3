@@ -508,7 +508,6 @@ setMethod("sc3min_kmeans", signature(object = "SingleCellExperiment"), sc3min_km
 #' and have the following format: \code{sc3min_k_clusters}, where \code{k} is the 
 #' number of clusters.
 #' 
-
 #' @name sc3min_calc_consens
 #' @aliases sc3min_calc_consens, sc3min_calc_consens,SingleCellExperiment-method
 #' 
@@ -518,7 +517,6 @@ setMethod("sc3min_kmeans", signature(object = "SingleCellExperiment"), sc3min_km
 #' 
 #' @importFrom doRNG %dorng%
 #' @importFrom foreach foreach
-#' @import plyr
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
 #' @import cluster
@@ -552,9 +550,7 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
   
   cons <- foreach::foreach(i = ks) %dorng% {
     try({
-      # d <- k.means[grep(paste0("_", i, "_"), names(k.means))]
-      #  d <- matrix(unlist(d), nrow = length(d[[1]]))
-      
+
       matrix.cols<-names(k.means)
       matrix.rows<-matrix(unlist(k.means), ncol = length(matrix.cols))
       matrix.toCluster<-matrix.rows
@@ -562,10 +558,7 @@ sc3min_calc_consens.SingleCellExperiment <- function(object) {
       res <- consensus_matrix(matrix.toCluster, ks)
       dat<-matrix(data=res$cluster, ncol = length(res$cluster)/ks, nrow = ks)
       
-      # colnames(dat)<-c(1:(length(res$cluster)/ks))
-      # rownames(dat)<-c(1:ks)
-      # tmp <- ED2(dat)
-      
+      #library(plyr)
       toList = plyr::alply(dat,1)
       allCons = lapply(toList,FUN = FindSimilarities)
       dat = Reduce("+", allCons)

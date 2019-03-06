@@ -40,7 +40,7 @@ colnames(mat) = cols
 ```
 Work with part of matrix only
 ```{r echo=TRUE, eval=TRUE,cache=FALSE,include=TRUE}
-mat = mat[,c(1:1000)]
+mat = mat[,c(1:100)]
 ```
 
 Create a SingleCell Experiment object.
@@ -60,14 +60,14 @@ rm(countMatrix)
 
 Estimate number of clusters (k) for sc3Min on the scATAC-seq data.
 ```{r include=FALSE}
-# library(SC3min)
-# sce = sc3min_estimate_k(sce)
-# str(metadata(sce)$sc3)
+library(sc3min)
+sce = sc3min_estimate_k(sce)
+str(metadata(sce)$sc3min)
 ```
 Run sc3min on the sc-ATAC data with 12 ks.
 ```{r}
 library(sc3min)
-sce = sc3min(sce, ks=12)
+sce = sc3min(sce, ks=3)
 ```
 Plot result of consensus. 
 ```{r}

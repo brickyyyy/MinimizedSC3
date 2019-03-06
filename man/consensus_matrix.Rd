@@ -8,8 +8,6 @@ consensus_matrix(clusts, k)
 }
 \arguments{
 \item{clusts}{a matrix containing clustering solutions in columns}
-
-\item{k}{number of clusters}
 }
 \value{
 consensus matrix

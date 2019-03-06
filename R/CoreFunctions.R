@@ -28,7 +28,6 @@
 #' 
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
-#' @export
 #'
 calculate_distance <- function(data, method) {
   return(if (method == "spearman") {
@@ -56,22 +55,22 @@ calculate_distance <- function(data, method) {
 #' @importFrom stats prcomp cmdscale
 #'
 transformation <- function(dists, method) {
-    # if (method == "pca") {
-    #     t <- prcomp(dists, center = TRUE, scale. = TRUE)
-    #     return(t$rotation)
-    # } else 
+  # if (method == "pca") {
+  #     t <- prcomp(dists, center = TRUE, scale. = TRUE)
+  #     return(t$rotation)
+  # } else 
   if (method == "laplacian") {
-        L <- norm_laplacian(dists)
-        l <- eigen(L)
-        # sort eigenvectors by their eigenvalues
-        return(l$vectors[, order(l$values)])
+    L <- norm_laplacian(dists)
+    l <- eigen(L)
+    # sort eigenvectors by their eigenvalues
+    return(l$vectors[, order(l$values)])
   }
-        else{
-          message("Only work with Laplacian, PCA transformation 
-                  is not accepted...")
-        }
-    
-}
+  else{
+    message("Only work with Laplacian, PCA transformation 
+            is not accepted...")
+  }
+  
+  }
 
 #' Calculate consensus matrix
 #'
@@ -83,16 +82,16 @@ transformation <- function(dists, method) {
 #' similarity matrices.
 #'
 #' @param clusts a matrix containing clustering solutions in columns
-#' @param k number of clusters
 #' @return consensus matrix
 #' 
 #' @useDynLib sc3min
+#' @importFrom Rcpp sourceCpp
 #' @export
 consensus_matrix <- function(clusts,k) {
-    res = calc_consensus(clusts,k)
-    colnames(res)<-colnames(clusts)
-    #res=kmeans(x=res, centers = k)
-    return(res)
+  res = calc_consensus(clusts,k)
+  colnames(res)<-colnames(clusts)
+  res=kmeans(x=res, centers = k)
+  return(res)
 }
 
 #' Calculate consensus matrix2
@@ -104,7 +103,7 @@ consensus_matrix <- function(clusts,k) {
 #' similarity matrices.
 #'
 #' @param matrix a matrix containing clustering solutions in columns
-#' @param k number of clusters
+#' @k number of clusters
 #' @return consensus matrix
 #'
 calc_consensus<-function(matrix, k) {
@@ -151,12 +150,12 @@ FindSimilarities = function(v){
 #' @importFrom e1071 svm
 #' @importFrom stats predict
 support_vector_machines <- function(train, study, kern) {
-    train <- t(train)
-    labs <- factor(rownames(train))
-    rownames(train) <- NULL
-    model <- tryCatch(svm(train, labs, kernel = kern), error = function(cond) return(NA))
-    pred <- predict(model, t(study))
-    return(pred = pred)
+  train <- t(train)
+  labs <- factor(rownames(train))
+  rownames(train) <- NULL
+  model <- tryCatch(svm(train, labs, kernel = kern), error = function(cond) return(NA))
+  pred <- predict(model, t(study))
+  return(pred = pred)
 }
 
 #' A helper function for the SVM analysis
@@ -170,26 +169,26 @@ support_vector_machines <- function(train, study, kern) {
 #' @param svm_max define the maximum number of cells below which SVM is not run
 #' @return A list of indeces of the train and the study cells
 prepare_for_svm <- function(N, svm_num_cells = NULL, svm_train_inds = NULL, svm_max) {
-    
-    if (!is.null(svm_num_cells)) {
-        message("Defining training cells for SVM using svm_num_cells parameter...")
-        train_inds <- sample(1:N, svm_num_cells)
-        study_inds <- setdiff(1:N, train_inds)
-    }
-    
-    if (!is.null(svm_train_inds)) {
-        message("Defining training cells for SVM using svm_train_inds parameter...")
-        train_inds <- svm_train_inds
-        study_inds <- setdiff(1:N, svm_train_inds)
-    }
-    
-    if (is.null(svm_num_cells) & is.null(svm_train_inds)) {
-        message(paste0("Defining training cells for SVM using ", svm_max, " random cells..."))
-        train_inds <- sample(1:N, svm_max)
-        study_inds <- setdiff(1:N, train_inds)
-    }
-    
-    return(list(svm_train_inds = train_inds, svm_study_inds = study_inds))
+  
+  if (!is.null(svm_num_cells)) {
+    message("Defining training cells for SVM using svm_num_cells parameter...")
+    train_inds <- sample(1:N, svm_num_cells)
+    study_inds <- setdiff(1:N, train_inds)
+  }
+  
+  if (!is.null(svm_train_inds)) {
+    message("Defining training cells for SVM using svm_train_inds parameter...")
+    train_inds <- svm_train_inds
+    study_inds <- setdiff(1:N, svm_train_inds)
+  }
+  
+  if (is.null(svm_num_cells) & is.null(svm_train_inds)) {
+    message(paste0("Defining training cells for SVM using ", svm_max, " random cells..."))
+    train_inds <- sample(1:N, svm_max)
+    study_inds <- setdiff(1:N, train_inds)
+  }
+  
+  return(list(svm_train_inds = train_inds, svm_study_inds = study_inds))
 }
 
 #' Estimate the optimal k for k-means clustering
@@ -201,83 +200,83 @@ prepare_for_svm <- function(N, svm_num_cells = NULL, svm_train_inds = NULL, svm_
 #' @param dataset processed input expression matrix.
 #' @return an estimated number of clusters k
 estkTW <- function(dataset) {
-    
-    p <- ncol(dataset)
-    n <- nrow(dataset)
-    
-    # compute Tracy-Widom bound
-    x <- scale(dataset)
-    muTW <- (sqrt(n - 1) + sqrt(p))^2
-    sigmaTW <- (sqrt(n - 1) + sqrt(p)) * (1/sqrt(n - 1) + 1/sqrt(p))^(1/3)
-    sigmaHatNaive <- tmult(x)  # x left-multiplied by its transpose
-    bd <- 3.273 * sigmaTW + muTW  # 3.2730 is the p=0.001 percentile point for the Tracy-Widom distribution
-    
-    # compute eigenvalues and return the amount which falls above the bound
-    evals <- eigen(sigmaHatNaive, symmetric = TRUE, only.values = TRUE)$values
-    k <- 0
-    for (i in 1:length(evals)) {
-        if (evals[i] > bd) {
-            k <- k + 1
-        }
+  
+  p <- ncol(dataset)
+  n <- nrow(dataset)
+  
+  # compute Tracy-Widom bound
+  x <- scale(dataset)
+  muTW <- (sqrt(n - 1) + sqrt(p))^2
+  sigmaTW <- (sqrt(n - 1) + sqrt(p)) * (1/sqrt(n - 1) + 1/sqrt(p))^(1/3)
+  sigmaHatNaive <- tmult(x)  # x left-multiplied by its transpose
+  bd <- 3.273 * sigmaTW + muTW  # 3.2730 is the p=0.001 percentile point for the Tracy-Widom distribution
+  
+  # compute eigenvalues and return the amount which falls above the bound
+  evals <- eigen(sigmaHatNaive, symmetric = TRUE, only.values = TRUE)$values
+  k <- 0
+  for (i in 1:length(evals)) {
+    if (evals[i] > bd) {
+      k <- k + 1
     }
-    return(k)
+  }
+  return(k)
 }
 
 make_col_ann_for_heatmaps <- function(object, show_pdata) {
-    if (any(!show_pdata %in% colnames(colData(object)))) {
-        show_pdata_excl <- show_pdata[!show_pdata %in% colnames(colData(object))]
-        show_pdata <- show_pdata[show_pdata %in% colnames(colData(object))]
-        message(paste0("Provided columns '", paste(show_pdata_excl, collapse = "', '"), "' do not exist in the phenoData table!"))
-        if (length(show_pdata) == 0) {
-            return(NULL)
-        }
+  if (any(!show_pdata %in% colnames(colData(object)))) {
+    show_pdata_excl <- show_pdata[!show_pdata %in% colnames(colData(object))]
+    show_pdata <- show_pdata[show_pdata %in% colnames(colData(object))]
+    message(paste0("Provided columns '", paste(show_pdata_excl, collapse = "', '"), "' do not exist in the phenoData table!"))
+    if (length(show_pdata) == 0) {
+      return(NULL)
     }
-    ann <- NULL
-    if (is.null(metadata(object)$sc3min$svm_train_inds)) {
-        ann <- colData(object)[, colnames(colData(object)) %in% show_pdata]
+  }
+  ann <- NULL
+  if (is.null(metadata(object)$sc3min$svm_train_inds)) {
+    ann <- colData(object)[, colnames(colData(object)) %in% show_pdata]
+  } else {
+    ann <- colData(object)[metadata(object)$sc3min$svm_train_inds, colnames(colData(object)) %in% 
+                             show_pdata]
+  }
+  # remove columns with 1 value only
+  if (length(show_pdata) > 1) {
+    keep <- unlist(lapply(ann, function(x) {
+      length(unique(x))
+    })) > 1
+    if (!all(keep)) {
+      message(paste0("Columns '", paste(names(keep)[!keep], collapse = "', '"), "' were excluded from annotation since they contained only a single value."))
+    }
+    ann <- ann[, names(keep)[keep]]
+    if (ncol(ann) == 0) {
+      ann <- NULL
     } else {
-        ann <- colData(object)[metadata(object)$sc3min$svm_train_inds, colnames(colData(object)) %in% 
-            show_pdata]
+      ann <- as.data.frame(lapply(ann, function(x) {
+        if (nlevels(as.factor(x)) > 9) 
+          x else as.factor(x)
+      }))
+      # convert outlier scores back to numeric
+      for (i in grep("_log2_outlier_score", colnames(ann))) {
+        if (class(ann[, i]) == "factor") {
+          ann[, i] <- as.numeric(levels(ann[, i]))[ann[, i]]
+        }
+      }
     }
-    # remove columns with 1 value only
-    if (length(show_pdata) > 1) {
-        keep <- unlist(lapply(ann, function(x) {
-            length(unique(x))
-        })) > 1
-        if (!all(keep)) {
-            message(paste0("Columns '", paste(names(keep)[!keep], collapse = "', '"), "' were excluded from annotation since they contained only a single value."))
-        }
-        ann <- ann[, names(keep)[keep]]
-        if (ncol(ann) == 0) {
-            ann <- NULL
-        } else {
-            ann <- as.data.frame(lapply(ann, function(x) {
-                if (nlevels(as.factor(x)) > 9) 
-                  x else as.factor(x)
-            }))
-            # convert outlier scores back to numeric
-            for (i in grep("_log2_outlier_score", colnames(ann))) {
-                if (class(ann[, i]) == "factor") {
-                  ann[, i] <- as.numeric(levels(ann[, i]))[ann[, i]]
-                }
-            }
-        }
+  } else {
+    if (length(unique(ann)) > 1) {
+      ann <- as.data.frame(ann)
+      colnames(ann) <- show_pdata
+      if (!grepl("_log2_outlier_score", show_pdata)) {
+        ann <- as.data.frame(lapply(ann, function(x) {
+          if (nlevels(as.factor(x)) > 9) 
+            return(x) else return(as.factor(x))
+        }))
+      }
     } else {
-        if (length(unique(ann)) > 1) {
-            ann <- as.data.frame(ann)
-            colnames(ann) <- show_pdata
-            if (!grepl("_log2_outlier_score", show_pdata)) {
-                ann <- as.data.frame(lapply(ann, function(x) {
-                  if (nlevels(as.factor(x)) > 9) 
-                    return(x) else return(as.factor(x))
-                }))
-            }
-        } else {
-            message(paste0("Column '", show_pdata, "' was excluded from annotation since they contained only a single value."))
-            ann <- NULL
-        }
+      message(paste0("Column '", show_pdata, "' was excluded from annotation since they contained only a single value."))
+      ann <- NULL
     }
-    return(ann)
+  }
+  return(ann)
 }
 
 #' Get processed dataset used by \code{sc3min} clustering
@@ -290,9 +289,9 @@ make_col_ann_for_heatmaps <- function(object, show_pdata) {
 #'
 #' @export
 get_processed_dataset <- function(object) {
-    dataset <- logcounts(object)
-    if (!is.null(rowData(object)$sc3min_gene_filter)) {
-        dataset <- dataset[rowData(object)$sc3min_gene_filter, ]
-    }
-    return(dataset)
+  dataset <- logcounts(object)
+  if (!is.null(rowData(object)$sc3min_gene_filter)) {
+    dataset <- dataset[rowData(object)$sc3min_gene_filter, ]
+  }
+  return(dataset)
 }
