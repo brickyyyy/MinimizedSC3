@@ -20,7 +20,7 @@ an object of \code{SingleCellExperiment} class
 }
 \description{
 This function calculates distances between the cells. It
-creates and populates the following items of the \code{sc3} slot of the \code{metadata(object)}:
+creates and populates the following items of the \code{sc3min} slot of the \code{metadata(object)}:
 \itemize{
   \item \code{distances} - contains a list of distance matrices corresponding to
   Euclidean, Pearson and Spearman distances.

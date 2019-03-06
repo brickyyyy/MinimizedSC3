@@ -28,7 +28,7 @@
 #' 
 #' @useDynLib sc3min
 #' @importFrom Rcpp sourceCpp
-#'
+#' @export
 calculate_distance <- function(data, method) {
   return(if (method == "spearman") {
     as.matrix(1 - cor(data, method = "spearman"))
@@ -82,6 +82,7 @@ transformation <- function(dists, method) {
 #' similarity matrices.
 #'
 #' @param clusts a matrix containing clustering solutions in columns
+#' @param k umber of clusters
 #' @return consensus matrix
 #' 
 #' @useDynLib sc3min
@@ -103,7 +104,7 @@ consensus_matrix <- function(clusts,k) {
 #' similarity matrices.
 #'
 #' @param matrix a matrix containing clustering solutions in columns
-#' @k number of clusters
+#' @param k number of clusters
 #' @return consensus matrix
 #'
 calc_consensus<-function(matrix, k) {
